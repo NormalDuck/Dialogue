@@ -4,3 +4,6 @@ version = "0.2.2"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 description = "Unofficial port of Fusion in 4/21/2024"
+
+[dependencies]
+Fusion = "elttob/fusion@0.2.0"
