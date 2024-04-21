@@ -1,0 +1,4 @@
+[tools]
+selene = { github = "Kampfkarren/selene", version = "x" }
+rojo = { github = "rojo-rbx/rojo", version = "7.0.0" }
+wally = { github = "UpliftGames/wally", version = "0.3.1" }
