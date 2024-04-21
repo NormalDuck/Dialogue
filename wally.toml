@@ -1,6 +1,6 @@
 [package]
 name = "normalduck/fusion"
-version = "0.2.1"
+version = "0.2.2"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 description = "Unofficial port of Fusion in 4/21/2024"
