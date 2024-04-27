@@ -3,14 +3,19 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local New = Fusion.New
+local Children = Fusion.Children
+local Value = Fusion.Value
+local Computed = Fusion.Computed
+local Observer = Fusion.Observer
 
-return function()
+return function(props: {})
 	New("ImageButton")({
 		BackgroundTransparency = 0.5,
 		Size = UDim2.fromScale(0.625, 0.345),
 		AnchorPoint = Vector2.new(0.5, 0.5),
 		Position = UDim2.fromScale(0.5, 0.8),
 		BackgroundColor3 = Color3.new(0, 0, 0),
+        Observer()
 	})
 end
 

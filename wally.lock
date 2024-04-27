@@ -3,6 +3,11 @@
 registry = "test"
 
 [[package]]
+name = "7kayoh/lydie"
+version = "0.1.0"
+dependencies = [["Fusion", "elttob/fusion@0.2.0"]]
+
+[[package]]
 name = "elttob/fusion"
 version = "0.2.0"
 dependencies = []
@@ -15,7 +20,7 @@ dependencies = []
 [[package]]
 name = "normalduck/dialogue"
 version = "0.1.0"
-dependencies = [["ByteNet", "ffrostflame/bytenet@0.4.5"], ["Fusion", "elttob/fusion@0.2.0"], ["TableUtil", "sleitnick/table-util@1.2.1"]]
+dependencies = [["ByteNet", "ffrostflame/bytenet@0.4.5"], ["Fusion", "elttob/fusion@0.2.0"], ["Lydie", "7kayoh/lydie@0.1.0"], ["TableUtil", "sleitnick/table-util@1.2.1"]]
 
 [[package]]
 name = "sleitnick/table-util"
