@@ -1,0 +1,12 @@
+{
+	"name": "fusion-utils-sourcemap-dev",
+	"tree": {
+		"$className": "Folder",
+		"Packages": {
+			"$path": "Packages/",
+			"FusionUtils": {
+				"$path": "src"
+			}
+		}
+	}
+}

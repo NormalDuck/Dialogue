@@ -10,4 +10,4 @@ Fusion = "elttob/fusion@0.2.0"
 ByteNet = "ffrostflame/bytenet@0.4.5"
 TableUtil = "sleitnick/table-util@1.2.1"
 Lydie = "7kayoh/lydie@0.1.0"
-#PLEASE REMOVE THE COMPILE FOLDER OUT OF PACKAGES BEFORE INSTALLING. IT WILL REMOVE SUBFILES AND IRRVERSIBLE
+Hotbar = "imavafe/neohotbar@1.1.1"

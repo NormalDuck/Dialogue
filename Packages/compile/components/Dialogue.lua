@@ -1,21 +1,24 @@
 --!native
 
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Fusion = require(ReplicatedStorage.Packages.Fusion)
+local Lydie = require(ReplicatedStorage.Packages.Lydie)
+--Fusion Keys--
 local New = Fusion.New
 local Children = Fusion.Children
 local Value = Fusion.Value
 local Computed = Fusion.Computed
 local Observer = Fusion.Observer
 
+
+--Lydie components--
+local TextButton = Lydie.Components.Controls.TextButton
+local BaseButton = Lydie.Components.Controls.BaseButton
+
 return function(props: {})
-	New("ImageButton")({
-		BackgroundTransparency = 0.5,
-		Size = UDim2.fromScale(0.625, 0.345),
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.8),
-		BackgroundColor3 = Color3.new(0, 0, 0),
-        Observer()
+	return BaseButton({
+		
 	})
 end
 
