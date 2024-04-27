@@ -1,9 +1,13 @@
 [package]
-name = "normalduck/fusion"
-version = "0.2.2"
+name = "normalduck/dialogue"
+version = "0.1.0"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
-description = "Unofficial port of Fusion in 4/21/2024"
+description = "A flexible dialogue module made with Fusion"
 
 [dependencies]
 Fusion = "elttob/fusion@0.2.0"
+ByteNet = "ffrostflame/bytenet@0.4.5"
+TableUtil = "sleitnick/table-util@1.2.1"
+
+#PLEASE REMOVE THE COMPILE FOLDER OUT OF PACKAGES BEFORE INSTALLING. IT WILL REMOVE SUBFILES AND IRRVERSIBLE

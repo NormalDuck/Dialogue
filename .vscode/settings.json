@@ -1,0 +1,20 @@
+{
+    "editor.suggest.showWords": false,
+    "[lua]": {
+        "editor.defaultFormatter": "JohnnyMorganz.stylua",
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.formatOnPaste": true,
+    },
+    "[luau]": {
+        "editor.defaultFormatter": "JohnnyMorganz.stylua",
+            "editor.formatOnSave": true,
+            "editor.formatOnType": true,
+            "editor.formatOnPaste": true,
+    },
+    "editor.quickSuggestions": {
+        "other": "on",
+        "comments": "on",
+        "strings": "on"
+    },
+}
