@@ -5,8 +5,13 @@ export type DialogueClient = {
 	ChoiceChosen: RBXScriptSignal,
 	SwitchToChoice: RBXScriptSignal,
 	NextMessage: RBXScriptSignal,
+	GetDialogueState: () -> "Message" | "Choice" | "Closed",
+	GetMessage: () -> string,
+	GetChoices: () -> { { UUID: string, ChoiceName: string } },
 }
-local DialogueClient: DialogueClient = {}
+
+local DialogueClient = {} :: DialogueClient
+
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
@@ -14,8 +19,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local TableUtil = require(ReplicatedStorage.Packages.TableUtil)
-local Packet = require(script.Parent:WaitForChild("packet"))
 local LemonSignal = require(ReplicatedStorage.Packages.LemonSignal)
+local Packet = require(script.Parent:WaitForChild("packet"))
 
 DialogueClient.CloseDialgoue = LemonSignal.new()
 DialogueClient.OpenDialogue = LemonSignal.new()
@@ -42,28 +47,29 @@ Packet.ExposeMessage.listen(function(Message)
 	DialogueState:set("Message")
 	Head:set(Message.Head)
 	Body:set(Message.Body)
+	DialogueClient.NextMessage:Fire()
 end)
 
 Packet.ExposeChoice.listen(function(ChoiceData)
-	print(ChoiceMessage:get())
 	Choices:set(ChoiceData.Choices)
 	ChoiceMessage:set(ChoiceData.ChoiceMessage)
 	DialogueState:set("Choice")
-	print(ChoiceMessage:get())
+	DialogueClient.SwitchToChoice:Fire()
 end)
 
 Packet.CloseDialogue.listen(function()
 	DialogueState:set(false)
 	ProximityPromptService.Enabled = true
-	DialogueClient.OnDialogueClosed:Fire()
+	DialogueClient.CloseDialgoue:Fire()
 end)
+--BYTENET EVENT LISTENERS END--
 
 ProximityPromptService.PromptTriggered:Connect(function(prompt)
 	if CollectionService:HasTag(prompt, "Dialogue") then
 		ProximityPromptService.Enabled = false
+		DialogueClient.OpenDialogue:Fire()
 	end
 end)
---BYTENET EVENT LISTENERS END--
 
 local StyleProps = {
 	AnchorPoint = Vector2.new(0.5, 0.5),
@@ -73,6 +79,20 @@ local StyleProps = {
 	TextScaled = true,
 	Font = Enum.Font.BuilderSans,
 }
+
+function DialogueClient.GetDialogueState()
+	return DialogueState:get()
+end
+
+function DialogueClient.GetMessage()
+	assert(DialogueState:get() == "Message", "[Dialgoue] Cannot get message in other states.")
+	return Head:get(), Body:get()
+end
+
+function DialogueClient.GetChoices()
+	assert(DialogueState:get() == "Choice", "[Dialogue] Cannot get choices in other states.")
+	return Choices:get()
+end
 
 New("ScreenGui")({
 	Parent = Players.LocalPlayer.PlayerGui,
@@ -146,6 +166,7 @@ New("ScreenGui")({
 										BackgroundColor3 = Color3.new(0, 0, 0),
 										[OnEvent("Activated")] = function()
 											Packet.ChoiceChosen.send({ UUID = Choice.UUID })
+											DialogueClient.ChoiceChosen:Fire()
 										end,
 									}, StyleProps))
 								)
