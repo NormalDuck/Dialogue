@@ -12,9 +12,5 @@
             "editor.formatOnType": true,
             "editor.formatOnPaste": true,
     },
-    "editor.quickSuggestions": {
-        "other": "on",
-        "comments": "on",
-        "strings": "on"
-    },
+
 }

@@ -7,22 +7,13 @@ return ByteNet.defineNamespace("messaging", function()
 		ExposeChoice = ByteNet.definePacket({
 			value = ByteNet.struct({
 				ChoiceMessage = ByteNet.string,
-				Choices = ByteNet.array
+				Choices = ByteNet.unknown,
 			}),
 		}),
 		ExposeMessage = ByteNet.definePacket({
 			value = ByteNet.struct({
-				Message = ByteNet.string,
-			}),
-		}),
-		CloseDialogue = ByteNet.definePacket({
-			value = ByteNet.struct({
-				_ = ByteNet.nothing,
-			}),
-		}),
-		SwitchToChoice = ByteNet.definePacket({
-			value = ByteNet.struct({
-				_ = ByteNet.nothing,
+				Head = ByteNet.string,
+				Body = ByteNet.string,
 			}),
 		}),
 		ChoiceChosen = ByteNet.definePacket({
@@ -30,20 +21,12 @@ return ByteNet.defineNamespace("messaging", function()
 				UUID = ByteNet.string,
 			}),
 		}),
-		FinishedMessage = ByteNet.definePacket({
-			value = ByteNet.struct({
-				_ = ByteNet.nothing,
-			}),
+		CloseDialogue = ByteNet.definePacket({
+			value = ByteNet.struct({}),
 		}),
-		-- EnablePP = ByteNet.definePacket({
-		-- 	value = ByteNet.struct({
-		-- 		_ = ByteNet.nothing,
-		-- 	}),
-		-- }),
-		-- DisablePP = ByteNet.definePacket({
-		-- 	value = ByteNet.struct({
-		-- 		_ = ByteNet.nothing,
-		-- 	}),
-		-- }),
+
+		FinishedMessage = ByteNet.definePacket({
+			value = ByteNet.struct({}),
+		}),
 	}
 end)
