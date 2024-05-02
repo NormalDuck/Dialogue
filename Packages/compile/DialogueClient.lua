@@ -124,7 +124,6 @@ New("ScreenGui")({
 						if DialogueState:get() == "Message" then
 							return Head:get()
 						elseif DialogueState:get() == "Choice" then
-							print(DialogueState:get(), ChoiceMessage:get())
 							return ChoiceMessage:get()
 						else
 							return ""
