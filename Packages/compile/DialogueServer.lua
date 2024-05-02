@@ -75,7 +75,7 @@ DialogueServer.DevMode = RunService:IsStudio()
 local Listeners = {}
 Listeners.__index = Listeners
 
---TODO: Add the ability to chain 
+--TODO: Add the ability to chain
 function Listeners:AddTriggerSignal(fn: (player: Player) -> ())
 	self._TriggerCallback = fn
 	return self
@@ -138,7 +138,7 @@ Packet.ChoiceChosen.listen(function(uuid, player: Player)
 			for _, Choice in ipairs(Data.CurrentClientDialogue.Choices.Data) do
 				if Choice.UUID == UUID then
 					Data.CurrentClientDialogue = Choice.Response
-					Data.CurrentClientMessage = 1
+					Data.CurrentClientMessage = 2
 					UseCallbacks(player, Data, Choice)
 					if Choice.Response then
 						Data.CurrentClientDialogue = Choice.Response
@@ -207,7 +207,7 @@ function DialogueServer.Mount(Dialogue: INTERNAL_MountInfo, Part: Instance, Cust
 		PPConnection = ProximityPrompt.TriggerEnded:Connect(function(player)
 			PlayersInDialogue[player.Name] = {
 				CurrentClientDialogue = Dialogue,
-				CurrentClientMessage = 1,
+				CurrentClientMessage = 2,
 				ExposeType = "Message",
 				Promises = (Dialogue.Message.Data[1]._TimeoutCallback and {
 					Promise.delay(Dialogue.Message.Data[1]._TimeoutTime):finally(function()
