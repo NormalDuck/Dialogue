@@ -146,6 +146,9 @@ New("ScreenGui")({
 					end),
 				}, StyleProps)),
 				New("ScrollingFrame")({
+					Visible = Computed(function()
+						return DialogueState:get() == "Choice"
+					end),
 					AnchorPoint = Vector2.new(0.5, 0.5),
 					Size = UDim2.fromScale(1, 0.7),
 					Position = UDim2.fromScale(0.5, 0.65),
