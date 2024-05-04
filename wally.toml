@@ -5,7 +5,7 @@ registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 description = "A flexible dialogue module made with Fusion"
 
-include = ["src", "src/*", "default.project.json", "wally.lock", "wally.toml"]
+include = ["src", "src/**", "default.project.json", "wally.lock", "wally.toml"]
 exclude = ["**"]
 
 [dependencies]
@@ -14,3 +14,4 @@ ByteNet = "ffrostflame/bytenet@0.4.5"
 TableUtil = "sleitnick/table-util@1.2.1"
 Promise = "evaera/promise@4.0.0"
 LemonSignal = "data-oriented-house/lemonsignal@1.10.0"
+Dialogue = "normalduck/dialogue@1.0.1"
