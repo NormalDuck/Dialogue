@@ -24,7 +24,7 @@ Compile.Mount(
 					)
 				)
 			),
-			Compile.ConstructChoice("xing worker", Compile.CreateDialogueTemplete(""))
+			Compile.ConstructChoice("skksjkdfjkdj")
 		)
 	),
 	workspace.Sigma

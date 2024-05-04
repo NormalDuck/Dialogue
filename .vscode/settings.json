@@ -12,4 +12,5 @@
             "editor.formatOnType": true,
             "editor.formatOnPaste": true,
     },
+    "editor.parameterHints.cycle": true
 }

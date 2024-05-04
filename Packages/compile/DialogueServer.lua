@@ -1,8 +1,9 @@
 --!native
 --!nocheck
-type CreateChoicesTemplete = (ChoiceMessage: string, ConstructChoice...) -> ()
-type CreateMessageTemplete = (ConstructMessage...) -> ()
-type CreateDialogueTemplete = (Message: CreateMessageTemplete, Choice: CreateChoicesTemplete) -> ()
+--TODO: Mirgrate these types into PubicTypes and PrivateTypes at release v2.1.0
+type CreateChoicesTemplete = (ChoiceMessage: string, ConstructChoice...) -> Listeners
+type CreateMessageTemplete = (ConstructMessage...) -> Listeners
+type CreateDialogueTemplete = (Message: CreateMessageTemplete, Choice: CreateChoicesTemplete) -> Listeners
 type ConstructChoice = (ChoiceName: string, Response: CreateDialogueTemplete, Timeout: number) -> Listeners
 type ConstructMessage = (Head: string, Body: string) -> Listeners
 type Mount = () -> ()
@@ -15,43 +16,93 @@ type DialogueServer = {
 	CreateDialogueTemplete: CreateDialogueTemplete,
 	Mount: Mount,
 }
-export type Listeners = {
-	AddTriggerSignal: (self: Listeners, fn: (player: Player) -> ()) -> (),
-	AddTimeoutSignal: (self: Listeners, Time: number, fn: (player: Player) -> ()) -> (),
+type Listeners = {
+	AddTriggerSignal: (self: Listeners, fn: (player: Player) -> ()) -> Listeners,
+	AddTimeoutSignal: (self: Listeners, Time: number, fn: (player: Player) -> ()) -> Listeners,
 }
 type INTERNAL_Message = {
 	Head: string,
 	Body: string,
-	_TimeoutTime: number?,
-	_TimeoutCallback: (player: Player) -> ()?,
-	_TriggerCallback: (player: Player) -> ()?,
+	Listeners: {
+		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
+		| { Type: "Trigger", Callback: (player: Player) -> () }
+	},
 }
 
 type INTERNAL_Choice = {
 	ChoiceName: string,
 	UUID: string,
 	Response: INTERNAL_MountInfo,
-	_TimeoutTime: number?,
-	_TimeoutCallback: (player: Player) -> ()?,
-	_TriggerCallback: (player: Player) -> ()?,
+	Listeners: {
+		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
+		| { Type: "Trigger", Callback: (player: Player) -> () }
+	},
 }
 
-type INTERNAL_CreateChoicesTemplete = CreateChoicesTemplete & () -> { ChoiceMessage: string, Data: { INTERNAL_Choice } }
-type INTERNAL_CreateMessageTemplete = CreateMessageTemplete & () -> { Data: { INTERNAL_Message } }
+type INTERNAL_CreateChoicesTemplete =
+	CreateChoicesTemplete
+	& (
+	) -> {
+		ChoiceMessage: string,
+		Data: { INTERNAL_Choice },
+		Listeners: {
+			{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
+			| { Type: "Trigger", Callback: (player: Player) -> () }
+		},
+	}
+type INTERNAL_CreateMessageTemplete =
+	CreateMessageTemplete
+	& (
+	) -> {
+		Data: { INTERNAL_Message },
+		Listeners: {
+			{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
+			| { Type: "Trigger", Callback: (player: Player) -> () }
+		},
+	}
 type INTERNAL_CreateDialogueTemplete =
 	CreateDialogueTemplete
-	& () -> { Message: INTERNAL_CreateMessageTemplete, Choice: INTERNAL_CreateChoicesTemplete }
+	& (
+	) -> {
+		Message: INTERNAL_CreateMessageTemplete,
+		Choice: INTERNAL_CreateChoicesTemplete,
+		Listeners: {
+			{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
+			| { Type: "Trigger", Callback: (player: Player) -> () }
+		},
+	}
 type INTERNAL_ConstructChoice = (ChoiceName: string, Response: INTERNAL_CreateDialogueTemplete) -> INTERNAL_Choice
 type INTERNAL_ConstructMessage = (Head: string, Body: string, Image: string) -> INTERNAL_Message
 type INTERNAL_MountInfo = {
-	Message: { Data: { INTERNAL_Message } },
-	Choices: { ChoiceMessage: string, Data: { INTERNAL_Choice } },
+	Message: {
+		Data: { INTERNAL_Message },
+		Listeners: {
+			{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
+			| { Type: "Trigger", Callback: (player: Player) -> () }
+		},
+	},
+	Choices: {
+		ChoiceMessage: string,
+		Data: { INTERNAL_Choice },
+		Listeners: {
+			{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
+			| { Type: "Trigger", Callback: (player: Player) -> () }
+		},
+	},
+	Listeners: {
+		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
+		| { Type: "Trigger", Callback: (player: Player) -> () }
+	},
 }
 type INTERNAL_ActivePlayerData = {
 	CurrentClientDialogue: INTERNAL_MountInfo,
 	CurrentClientMessage: number,
 	ExposeType: string,
-	Promises: {},
+	MessagePromises: {},
+	ChoicePromises: {},
+	ChoiceTempletePromises: {},
+	MessageTempletePromises: {},
+	DialogueTempletePromises: {},
 }
 
 --Services--
@@ -69,36 +120,44 @@ local TableUtil = require(ReplicatedStorage.Packages.TableUtil)
 local DialogueServer = {}
 local MountedDialogues = {}
 local PlayersInDialogue = {}
---TODO: Implement DevMode.
+
+--TODO: Implement DevMode at v2.1.0.
 DialogueServer.DevMode = RunService:IsStudio()
 
 local Listeners = {}
 Listeners.__index = Listeners
 
---TODO: Add the ability to chain
 function Listeners:AddTriggerSignal(fn: (player: Player) -> ())
-	self._TriggerCallback = fn
+	table.insert(self.Listeners, { Type = "Trigger", Callback = fn })
 	return self
 end
 
 function Listeners:AddTimeoutSignal(Time: number, fn: (player: Player) -> ())
-	self._TimeoutTime = Time
-	self._TimeoutCallback = fn
+	table.insert(self.Listeners, { Type = "Timeout", Time = Time, Callback = fn })
 	return self
 end
 
 --Searches for the message/choice and checks if there is callbacks (either TimeoutCallback, TriggerCallback). Calls them
-local function UseCallbacks(plr: Player, Data: INTERNAL_ActivePlayerData, Scan: INTERNAL_Choice | INTERNAL_Message)
-	if Scan._TimeoutCallback then
-		table.insert(
-			Data.Promises,
-			Promise.delay(Scan._TimeoutTime):finally(function()
-				Scan._TimeoutCallback(plr)
-			end)
-		)
-	end
-	if Scan._TriggerCallback then
-		Scan._TriggerCallback(plr)
+local function UseCallbacks(
+	plr: Player,
+	Scan: INTERNAL_Choice | INTERNAL_Message | INTERNAL_CreateChoicesTemplete | INTERNAL_CreateMessageTemplete | INTERNAL_CreateDialogueTemplete,
+	PromiseTable: "MessagePromises" | "ChoicePromises" | "ChoiceTempletePromises" | "MessageTempletePromises" | "DialogueTempletePromises"
+)
+	local Data = PlayersInDialogue[plr.Name]
+	if Scan.Listeners then
+		for _, Listener in ipairs(Scan.Listeners) do
+			if Listener.Type == "Trigger" then
+				Listener.Callback(plr)
+			end
+			if Listener.Type == "Timeout" then
+				table.insert(
+					Data[PromiseTable],
+					Promise.delay(Listener.Time):andThen(function()
+						Listener.Callback(plr)
+					end)
+				)
+			end
+		end
 	end
 end
 
@@ -133,18 +192,26 @@ Packet.ChoiceChosen.listen(function(uuid, player: Player)
 	local UUID = uuid.UUID
 	local Data: INTERNAL_ActivePlayerData = PlayersInDialogue[player.Name]
 	if Data then
-		CancelPromises(Data.Promises)
+		CancelPromises(Data.ChoicePromises)
+		CancelPromises(Data.ChoiceTempletePromises)
 		if Data.ExposeType == "Choice" then
 			for _, Choice in ipairs(Data.CurrentClientDialogue.Choices.Data) do
 				if Choice.UUID == UUID then
 					Data.CurrentClientDialogue = Choice.Response
 					Data.CurrentClientMessage = 2
 					UseCallbacks(player, Data, Choice)
+					CancelPromises(Data.DialogueTempletePromises)
 					if Choice.Response then
 						Data.CurrentClientDialogue = Choice.Response
-						Data.CurrentClientMessage = 1
+						Data.CurrentClientMessage = 2
 						Data.ExposeType = "Message"
-						UseCallbacks(player, Data, Data.CurrentClientDialogue.Message.Data[Data.CurrentClientMessage])
+						UseCallbacks(
+							player,
+							Data.CurrentClientDialogue.Message.Data[Data.CurrentClientMessage],
+							"MessagePromises"
+						)
+						UseCallbacks(player, Data.CurrentClientDialogue.Message, "MessageTempletePromises")
+						UseCallbacks(player, Data.CurrentClientDialogue, "DialogueTempletePromises")
 						return Packet.ExposeMessage.sendTo({
 							Head = Data.CurrentClientDialogue.Message.Data[Data.CurrentClientMessage].Head,
 							Body = Data.CurrentClientDialogue.Message.Data[Data.CurrentClientMessage].Body,
@@ -153,9 +220,10 @@ Packet.ChoiceChosen.listen(function(uuid, player: Player)
 						PlayersInDialogue[player.Name] = nil
 						return Packet.CloseDialogue.sendTo({}, player)
 					end
-					player:Kick(`Anticheat: {script.Name}, {debug.info(1, "l")}`)
 				end
 			end
+		else
+			player:Kick(`Anticheat: {script.Name}, {debug.info(1, "l")}`)
 		end
 	else
 		player:Kick(`Anticheat: {script.Name}, {debug.info(1, "l")}`)
@@ -165,15 +233,15 @@ end)
 Packet.FinishedMessage.listen(function(_, player)
 	local Data: INTERNAL_ActivePlayerData = PlayersInDialogue[player.Name]
 	if Data then
+		CancelPromises(Data.MessagePromises)
 		local NextMessage: INTERNAL_Message = Data.CurrentClientDialogue.Message.Data[Data.CurrentClientMessage]
 		Data.CurrentClientMessage += 1
-		CancelPromises(Data.Promises)
 		if Data.ExposeType == "Message" then
 			if NextMessage then
 				if Data.CurrentClientMessage == #Data.CurrentClientDialogue.Message + 1 then
 					player:Kick(`Anticheat: {script.Name}, {debug.info(1, "l")}`)
 				else
-					UseCallbacks(player, Data, NextMessage)
+					UseCallbacks(player, NextMessage, "MessagePromises")
 				end
 				Packet.ExposeMessage.sendTo({ Head = NextMessage.Head, Body = NextMessage.Body }, player)
 			else
@@ -184,8 +252,17 @@ Packet.FinishedMessage.listen(function(_, player)
 					Data.ExposeType = "Choice"
 					local Choices = TableUtil.Copy(Data.CurrentClientDialogue.Choices, true)
 					for _, Choice: INTERNAL_Choice in ipairs(Choices.Data) do
-						utils.Unreconcile(Choice, "Response", "_TimeoutTime", "_TimeoutCallback", "_TriggerCallback")
+						utils.Unreconcile(
+							Choice,
+							"Response",
+							"_TimeoutTime",
+							"_TimeoutCallback",
+							"_TriggerCallback",
+							"Listeners"
+						)
 					end
+					CancelPromises(Data.MessageTempletePromises)
+					UseCallbacks(player, Data.CurrentClientDialogue.Choices, "ChoiceTempletePromises")
 					Packet.ExposeChoice.sendTo({
 						ChoiceMessage = Data.CurrentClientDialogue.Choices.ChoiceMessage,
 						Choices = Choices.Data,
@@ -200,6 +277,12 @@ Packet.FinishedMessage.listen(function(_, player)
 	end
 end)
 
+--[[
+	Listeners:
+	Finished: ConstructMessage, ConstructChoice, CreateChoicesTemplete, CreateMessageTemplete
+	Not Finished:  , CreateDialogueTemplete
+]]
+
 function DialogueServer.Mount(Dialogue: INTERNAL_MountInfo, Part: Instance, CustomProximityPrompt: ProximityPrompt?)
 	local ProximityPrompt = Instance.new("ProximityPrompt", Part)
 	ProximityPrompt:AddTag("Dialogue")
@@ -209,38 +292,44 @@ function DialogueServer.Mount(Dialogue: INTERNAL_MountInfo, Part: Instance, Cust
 				CurrentClientDialogue = Dialogue,
 				CurrentClientMessage = 2,
 				ExposeType = "Message",
-				Promises = (Dialogue.Message.Data[1]._TimeoutCallback and {
-					Promise.delay(Dialogue.Message.Data[1]._TimeoutTime):finally(function()
-						Dialogue.Message.Data[1]._TimeoutCallback(player)
-					end),
-				}) or {},
+				MessagePromises = {},
+				ChoicePromises = {},
+				ChoiceTempletePromises = {},
+				MessageTempletePromises = {},
+				DialogueTempletePromises = {},
 			}
 			Packet.ExposeMessage.sendTo(
 				{ Head = Dialogue.Message.Data[1].Head, Body = Dialogue.Message.Data[1].Body },
 				player
 			)
+			local Data = PlayersInDialogue[player.Name]
+			UseCallbacks(player, Data.CurrentClientDialogue.Message, "MessageTempletePromises")
+			UseCallbacks(player, Data.CurrentClientDialogue, "DialogueTempletePromises")
 		end),
 	})
 end
 
 function DialogueServer.CreateDialogueTemplete(Message: CreateMessageTemplete, Choice: CreateChoicesTemplete)
-	local t = {}
+	local t = setmetatable({}, Listeners)
 	t.Message = Message
 	t.Choices = Choice
+	t.Listeners = {}
 	return t
 end
 
 function DialogueServer.CreateChoicesTemplete(ChoiceMessage: string, ...: INTERNAL_Choice)
 	assert(type(ChoiceMessage) == "string", "[Dialogue] Choice message is a string. ")
-	local t = {}
+	local t = setmetatable({}, Listeners)
 	t.Data = { ... }
 	t.ChoiceMessage = ChoiceMessage
+	t.Listeners = {}
 	return t
 end
 
 function DialogueServer.CreateMessageTemplete(...: INTERNAL_Message)
-	local t = {}
+	local t = setmetatable({}, Listeners)
 	t.Data = { ... }
+	t.Listeners = {}
 	return t
 end
 
@@ -250,6 +339,7 @@ function DialogueServer.ConstructMessage(Head: string, Body: string)
 	local m = setmetatable({}, Listeners)
 	m.Head = Head
 	m.Body = Body
+	m.Listeners = {}
 	return m
 end
 
@@ -259,7 +349,8 @@ function DialogueServer.ConstructChoice(ChoiceName: string, Response: INTERNAL_C
 	c.ChoiceName = ChoiceName
 	c.UUID = HttpService:GenerateGUID()
 	c.Response = Response
-	return c :: INTERNAL_Choice
+	c.Listeners = {}
+	return c
 end
 
 return DialogueServer :: DialogueServer
