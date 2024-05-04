@@ -11,12 +11,14 @@ A secure, lightweight, server-sided, Fusion-based module.
 Currently it only supports wally package manager. Sorry for the people who use Roblox's editor.
 <details>
 <summary> wally </summary>
+  
 ```toml
-Dialogue = "normalduck/dialogue@1.0.1"
+Dialogue = "normalduck/dialogue@1.1.0"
 Fusion = "elttob/fusion@0.2.0"
 ByteNet = "ffrostflame/bytenet@0.4.5"
 TableUtil = "sleitnick/table-util@1.2.1"
 Promise = "evaera/promise@4.0.0"
 LemonSignal = "data-oriented-house/lemonsignal@1.10.0"
 ```
+
 </details>
