@@ -1,6 +1,6 @@
 {
 	"name": "dialogue",
 	"tree": {
-		"$path": "src"
+		"$path": "src/"
 	}
 }

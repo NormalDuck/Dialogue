@@ -1,12 +1,9 @@
 --!native
 --!nocheck
-
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
-local RunService = game:GetService("RunService")
 
-local utils = require(script.Parent:WaitForChild("utils"))
 local Packet = require(script.Parent:WaitForChild("packet"))
 local PrivateTypes = require(script.Parent:WaitForChild("PrivateTypes"))
 local PublicTypes = require(script.Parent:WaitForChild("PublicTypes"))
