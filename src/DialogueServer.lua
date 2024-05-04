@@ -1,128 +1,21 @@
 --!native
 --!nocheck
---TODO: Mirgrate these types into PubicTypes and PrivateTypes at release v2.1.0
-type CreateChoicesTemplete = (ChoiceMessage: string, ConstructChoice...) -> Listeners
-type CreateMessageTemplete = (ConstructMessage...) -> Listeners
-type CreateDialogueTemplete = (Message: CreateMessageTemplete, Choice: CreateChoicesTemplete) -> Listeners
-type ConstructChoice = (ChoiceName: string, Response: CreateDialogueTemplete, Timeout: number) -> Listeners
-type ConstructMessage = (Head: string, Body: string) -> Listeners
-type Mount = () -> ()
 
-type DialogueServer = {
-	ConstructChoice: ConstructChoice,
-	ConstructMessage: ConstructMessage,
-	CreateChoicesTemplete: CreateChoicesTemplete,
-	CreateMessageTemplete: CreateMessageTemplete,
-	CreateDialogueTemplete: CreateDialogueTemplete,
-	Mount: Mount,
-}
-type Listeners = {
-	AddTriggerSignal: (self: Listeners, fn: (player: Player) -> ()) -> Listeners,
-	AddTimeoutSignal: (self: Listeners, Time: number, fn: (player: Player) -> ()) -> Listeners,
-}
-type INTERNAL_Message = {
-	Head: string,
-	Body: string,
-	Listeners: {
-		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-		| { Type: "Trigger", Callback: (player: Player) -> () }
-	},
-}
-
-type INTERNAL_Choice = {
-	ChoiceName: string,
-	UUID: string,
-	Response: INTERNAL_MountInfo,
-	Listeners: {
-		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-		| { Type: "Trigger", Callback: (player: Player) -> () }
-	},
-}
-
-type INTERNAL_CreateChoicesTemplete =
-	CreateChoicesTemplete
-	& (
-	) -> {
-		ChoiceMessage: string,
-		Data: { INTERNAL_Choice },
-		Listeners: {
-			{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-			| { Type: "Trigger", Callback: (player: Player) -> () }
-		},
-	}
-type INTERNAL_CreateMessageTemplete =
-	CreateMessageTemplete
-	& (
-	) -> {
-		Data: { INTERNAL_Message },
-		Listeners: {
-			{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-			| { Type: "Trigger", Callback: (player: Player) -> () }
-		},
-	}
-type INTERNAL_CreateDialogueTemplete =
-	CreateDialogueTemplete
-	& (
-	) -> {
-		Message: INTERNAL_CreateMessageTemplete,
-		Choice: INTERNAL_CreateChoicesTemplete,
-		Listeners: {
-			{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-			| { Type: "Trigger", Callback: (player: Player) -> () }
-		},
-	}
-type INTERNAL_ConstructChoice = (ChoiceName: string, Response: INTERNAL_CreateDialogueTemplete) -> INTERNAL_Choice
-type INTERNAL_ConstructMessage = (Head: string, Body: string, Image: string) -> INTERNAL_Message
-type INTERNAL_MountInfo = {
-	Message: {
-		Data: { INTERNAL_Message },
-		Listeners: {
-			{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-			| { Type: "Trigger", Callback: (player: Player) -> () }
-		},
-	},
-	Choices: {
-		ChoiceMessage: string,
-		Data: { INTERNAL_Choice },
-		Listeners: {
-			{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-			| { Type: "Trigger", Callback: (player: Player) -> () }
-		},
-	},
-	Listeners: {
-		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-		| { Type: "Trigger", Callback: (player: Player) -> () }
-	},
-}
-type INTERNAL_ActivePlayerData = {
-	CurrentClientDialogue: INTERNAL_MountInfo,
-	CurrentClientMessage: number,
-	ExposeType: string,
-	MessagePromises: {},
-	ChoicePromises: {},
-	ChoiceTempletePromises: {},
-	MessageTempletePromises: {},
-	DialogueTempletePromises: {},
-}
-
---Services--
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
---Modules--
+
 local utils = require(script.Parent:WaitForChild("utils"))
 local Packet = require(script.Parent:WaitForChild("packet"))
-local Promise = require(ReplicatedStorage.Packages.Promise)
-local TableUtil = require(ReplicatedStorage.Packages.TableUtil)
+local PrivateTypes = require(script.Parent:WaitForChild("PrivateTypes"))
+local PublicTypes = require(script.Parent:WaitForChild("PublicTypes"))
+local Promise = require(script.Parent.Parent.Promise)
+local TableUtil = require(script.Parent.Parent.TableUtil)
 
 local DialogueServer = {}
 local MountedDialogues = {}
 local PlayersInDialogue = {}
-
---TODO: Implement DevMode at v2.1.0.
-DialogueServer.DevMode = RunService:IsStudio()
 
 local Listeners = {}
 Listeners.__index = Listeners
@@ -140,7 +33,7 @@ end
 --Searches for the message/choice and checks if there is callbacks (either TimeoutCallback, TriggerCallback). Calls them
 local function UseCallbacks(
 	plr: Player,
-	Scan: INTERNAL_Choice | INTERNAL_Message | INTERNAL_CreateChoicesTemplete | INTERNAL_CreateMessageTemplete | INTERNAL_CreateDialogueTemplete,
+	Scan: PrivateTypes.Choice | PrivateTypes.Message | PrivateTypes.CreateChoicesTemplete | PrivateTypes.CreateMessageTemplete | PrivateTypes.CreateDialogueTemplete,
 	PromiseTable: "MessagePromises" | "ChoicePromises" | "ChoiceTempletePromises" | "MessageTempletePromises" | "DialogueTempletePromises"
 )
 	local Data = PlayersInDialogue[plr.Name]
@@ -169,6 +62,15 @@ local function CancelPromises(PromiseTable: {})
 	table.clear(PromiseTable)
 end
 
+local function Unreconcile(t: table, ...: string)
+	for _, propertyName in ipairs({ ... }) do
+		if t[propertyName] then
+			t[propertyName] = nil
+		end
+	end
+	return t
+end
+
 ProximityPromptService.PromptTriggered:Connect(function(prompt, playerWhoTriggered)
 	if PlayersInDialogue[playerWhoTriggered.Name] then
 		playerWhoTriggered:Kick(`Anticheat: {script.Name}, {debug.info(1, "l")}`)
@@ -189,7 +91,7 @@ end)
 
 Packet.ChoiceChosen.listen(function(uuid, player: Player)
 	local UUID = uuid.UUID
-	local Data: INTERNAL_ActivePlayerData = PlayersInDialogue[player.Name]
+	local Data: PrivateTypes.ActivePlayerData = PlayersInDialogue[player.Name]
 	if Data then
 		CancelPromises(Data.ChoicePromises)
 		CancelPromises(Data.ChoiceTempletePromises)
@@ -228,11 +130,11 @@ Packet.ChoiceChosen.listen(function(uuid, player: Player)
 end)
 
 Packet.FinishedMessage.listen(function(_, player)
-	local Data: INTERNAL_ActivePlayerData = PlayersInDialogue[player.Name]
+	local Data: PrivateTypes.ActivePlayerData = PlayersInDialogue[player.Name]
 	if Data then
 		CancelPromises(Data.MessagePromises)
 		Data.CurrentClientMessage += 1
-		local NextMessage: INTERNAL_Message = Data.CurrentClientDialogue.Message.Data[Data.CurrentClientMessage]
+		local NextMessage: PrivateTypes.Message = Data.CurrentClientDialogue.Message.Data[Data.CurrentClientMessage]
 		if Data.ExposeType == "Message" then
 			if NextMessage then
 				if Data.CurrentClientMessage == #Data.CurrentClientDialogue.Message + 1 then
@@ -248,8 +150,8 @@ Packet.FinishedMessage.listen(function(_, player)
 				else
 					Data.ExposeType = "Choice"
 					local Choices = TableUtil.Copy(Data.CurrentClientDialogue.Choices, true)
-					for _, Choice: INTERNAL_Choice in ipairs(Choices.Data) do
-						utils.Unreconcile(
+					for _, Choice: PrivateTypes.Choice in ipairs(Choices.Data) do
+						Unreconcile(
 							Choice,
 							"Response",
 							"_TimeoutTime",
@@ -274,7 +176,7 @@ Packet.FinishedMessage.listen(function(_, player)
 	end
 end)
 
-function DialogueServer.Mount(Dialogue: INTERNAL_MountInfo, Part: Instance, CustomProximityPrompt: ProximityPrompt?)
+function DialogueServer.Mount(Dialogue: PrivateTypes.MountInfo, Part: Instance, CustomProximityPrompt: ProximityPrompt?)
 	local ProximityPrompt = Instance.new("ProximityPrompt", Part)
 	ProximityPrompt:AddTag("Dialogue")
 	table.insert(MountedDialogues, {
@@ -300,7 +202,10 @@ function DialogueServer.Mount(Dialogue: INTERNAL_MountInfo, Part: Instance, Cust
 	})
 end
 
-function DialogueServer.CreateDialogueTemplete(Message: CreateMessageTemplete, Choice: CreateChoicesTemplete)
+function DialogueServer.CreateDialogueTemplete(
+	Message: PrivateTypes.CreateMessageTemplete,
+	Choice: PrivateTypes.CreateChoicesTemplete
+)
 	local t = setmetatable({}, Listeners)
 	t.Message = Message
 	t.Choices = Choice
@@ -308,7 +213,7 @@ function DialogueServer.CreateDialogueTemplete(Message: CreateMessageTemplete, C
 	return t
 end
 
-function DialogueServer.CreateChoicesTemplete(ChoiceMessage: string, ...: INTERNAL_Choice)
+function DialogueServer.CreateChoicesTemplete(ChoiceMessage: string, ...: PrivateTypes.Choice)
 	assert(type(ChoiceMessage) == "string", "[Dialogue] Choice message is a string. ")
 	local t = setmetatable({}, Listeners)
 	t.Data = { ... }
@@ -317,7 +222,7 @@ function DialogueServer.CreateChoicesTemplete(ChoiceMessage: string, ...: INTERN
 	return t
 end
 
-function DialogueServer.CreateMessageTemplete(...: INTERNAL_Message)
+function DialogueServer.CreateMessageTemplete(...: PrivateTypes.Message)
 	local t = setmetatable({}, Listeners)
 	t.Data = { ... }
 	t.Listeners = {}
@@ -334,7 +239,7 @@ function DialogueServer.ConstructMessage(Head: string, Body: string)
 	return m
 end
 
-function DialogueServer.ConstructChoice(ChoiceName: string, Response: INTERNAL_CreateDialogueTemplete)
+function DialogueServer.ConstructChoice(ChoiceName: string, Response: PrivateTypes.CreateDialogueTemplete)
 	assert(ChoiceName, "[Dialogue] Empty or nil for ChoiceName")
 	local c = setmetatable({}, Listeners)
 	c.ChoiceName = ChoiceName
@@ -344,4 +249,4 @@ function DialogueServer.ConstructChoice(ChoiceName: string, Response: INTERNAL_C
 	return c
 end
 
-return DialogueServer :: DialogueServer
+return DialogueServer :: PublicTypes.DialogueServer

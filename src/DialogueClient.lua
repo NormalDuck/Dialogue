@@ -1,16 +1,7 @@
 --!native
-export type DialogueClient = {
-	CloseDialgoue: RBXScriptSignal,
-	OpenDialogue: RBXScriptSignal,
-	ChoiceChosen: RBXScriptSignal,
-	SwitchToChoice: RBXScriptSignal,
-	NextMessage: RBXScriptSignal,
-	GetDialogueState: () -> "Message" | "Choice" | "Closed",
-	GetMessage: () -> string,
-	GetChoices: () -> { { UUID: string, ChoiceName: string } },
-}
 
-local DialogueClient = {} :: DialogueClient
+
+local DialogueClient = {}
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
@@ -21,6 +12,7 @@ local Fusion = require(ReplicatedStorage.Packages.Fusion)
 local TableUtil = require(ReplicatedStorage.Packages.TableUtil)
 local LemonSignal = require(ReplicatedStorage.Packages.LemonSignal)
 local Packet = require(script.Parent:WaitForChild("packet"))
+local PublicTypes = require(script.Parent:WaitForChild("PublicTypes"))
 
 DialogueClient.CloseDialgoue = LemonSignal.new()
 DialogueClient.OpenDialogue = LemonSignal.new()
@@ -185,4 +177,4 @@ New("ScreenGui")({
 	},
 })
 
-return DialogueClient :: DialogueClient
+return DialogueClient :: PublicTypes.DialogueClient
