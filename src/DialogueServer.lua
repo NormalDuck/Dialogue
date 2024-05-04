@@ -163,7 +163,6 @@ end
 
 --INTERNAL: Cancels all the promises in the table and making the table empty
 local function CancelPromises(PromiseTable: {})
-	print(PromiseTable)
 	for _, promise in ipairs(PromiseTable) do
 		promise:cancel()
 	end
@@ -197,13 +196,11 @@ Packet.ChoiceChosen.listen(function(uuid, player: Player)
 		if Data.ExposeType == "Choice" then
 			for _, Choice in ipairs(Data.CurrentClientDialogue.Choices.Data) do
 				if Choice.UUID == UUID then
-					Data.CurrentClientDialogue = Choice.Response
-					Data.CurrentClientMessage = 2
-					UseCallbacks(player, Data, Choice)
+					UseCallbacks(player, Choice, "ChoicePromises")
 					CancelPromises(Data.DialogueTempletePromises)
 					if Choice.Response then
 						Data.CurrentClientDialogue = Choice.Response
-						Data.CurrentClientMessage = 2
+						Data.CurrentClientMessage = 1
 						Data.ExposeType = "Message"
 						UseCallbacks(
 							player,
@@ -234,8 +231,8 @@ Packet.FinishedMessage.listen(function(_, player)
 	local Data: INTERNAL_ActivePlayerData = PlayersInDialogue[player.Name]
 	if Data then
 		CancelPromises(Data.MessagePromises)
-		local NextMessage: INTERNAL_Message = Data.CurrentClientDialogue.Message.Data[Data.CurrentClientMessage]
 		Data.CurrentClientMessage += 1
+		local NextMessage: INTERNAL_Message = Data.CurrentClientDialogue.Message.Data[Data.CurrentClientMessage]
 		if Data.ExposeType == "Message" then
 			if NextMessage then
 				if Data.CurrentClientMessage == #Data.CurrentClientDialogue.Message + 1 then
@@ -277,12 +274,6 @@ Packet.FinishedMessage.listen(function(_, player)
 	end
 end)
 
---[[
-	Listeners:
-	Finished: ConstructMessage, ConstructChoice, CreateChoicesTemplete, CreateMessageTemplete
-	Not Finished:  , CreateDialogueTemplete
-]]
-
 function DialogueServer.Mount(Dialogue: INTERNAL_MountInfo, Part: Instance, CustomProximityPrompt: ProximityPrompt?)
 	local ProximityPrompt = Instance.new("ProximityPrompt", Part)
 	ProximityPrompt:AddTag("Dialogue")
@@ -290,7 +281,7 @@ function DialogueServer.Mount(Dialogue: INTERNAL_MountInfo, Part: Instance, Cust
 		PPConnection = ProximityPrompt.TriggerEnded:Connect(function(player)
 			PlayersInDialogue[player.Name] = {
 				CurrentClientDialogue = Dialogue,
-				CurrentClientMessage = 2,
+				CurrentClientMessage = 1,
 				ExposeType = "Message",
 				MessagePromises = {},
 				ChoicePromises = {},

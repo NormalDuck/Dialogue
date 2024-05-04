@@ -11,4 +11,3 @@ ByteNet = "ffrostflame/bytenet@0.4.5"
 TableUtil = "sleitnick/table-util@1.2.1"
 Promise = "evaera/promise@4.0.0"
 LemonSignal = "data-oriented-house/lemonsignal@1.10.0"
-#please remove compile folder outside --REMOVE THIS MESSAGE BEFORE COMMIT
