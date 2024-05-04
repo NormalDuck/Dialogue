@@ -1,6 +1,5 @@
 --!native
-
-
+--!nocheck
 local DialogueClient = {}
 
 local CollectionService = game:GetService("CollectionService")

@@ -24,7 +24,7 @@ dependencies = []
 
 [[package]]
 name = "normalduck/dialogue"
-version = "0.1.0"
+version = "1.0.0"
 dependencies = [["ByteNet", "ffrostflame/bytenet@0.4.5"], ["Fusion", "elttob/fusion@0.2.0"], ["LemonSignal", "data-oriented-house/lemonsignal@1.10.0"], ["Promise", "evaera/promise@4.0.0"], ["TableUtil", "sleitnick/table-util@1.2.1"]]
 
 [[package]]
