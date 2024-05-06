@@ -17,7 +17,7 @@ export type Choice = {
 	},
 }
 
-export type CreateChoicesTemplete = (
+export type CreateChoicesTemplate = (
 	ChoiceMessage: string,
 	ConstructChoice...
 ) -> {
@@ -28,7 +28,7 @@ export type CreateChoicesTemplete = (
 		| { Type: "Trigger", Callback: (player: Player) -> () }
 	},
 }
-export type CreateMessageTemplete = (
+export type CreateMessageTemplate = (
 	ConstructMessage...
 ) -> {
 	Data: { Message },
@@ -37,18 +37,18 @@ export type CreateMessageTemplete = (
 		| { Type: "Trigger", Callback: (player: Player) -> () }
 	},
 }
-export type CreateDialogueTemplete = (
-	Message: CreateMessageTemplete,
-	Choice: CreateChoicesTemplete
+export type CreateDialogueTemplate = (
+	Message: CreateMessageTemplate,
+	Choice: CreateChoicesTemplate
 ) -> {
-	Message: CreateMessageTemplete,
-	Choice: CreateChoicesTemplete,
+	Message: CreateMessageTemplate,
+	Choice: CreateChoicesTemplate,
 	Listeners: {
 		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
 		| { Type: "Trigger", Callback: (player: Player) -> () }
 	},
 }
-export type ConstructChoice = (ChoiceName: string, Response: CreateDialogueTemplete) -> Choice
+export type ConstructChoice = (ChoiceName: string, Response: CreateDialogueTemplate) -> Choice
 export type ConstructMessage = (Head: string, Body: string, Image: string) -> Message
 export type MountInfo = {
 	Message: {
@@ -77,9 +77,9 @@ export type ActivePlayerData = {
 	ExposeType: string,
 	MessagePromises: {},
 	ChoicePromises: {},
-	ChoiceTempletePromises: {},
-	MessageTempletePromises: {},
-	DialogueTempletePromises: {},
+	ChoiceTemplatePromises: {},
+	MessageTemplatePromises: {},
+	DialogueTemplatePromises: {},
 }
 
 return nil

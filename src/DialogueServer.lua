@@ -30,8 +30,8 @@ end
 --Searches for the message/choice and checks if there is callbacks (either TimeoutCallback, TriggerCallback). Calls them
 local function UseCallbacks(
 	plr: Player,
-	Scan: PrivateTypes.Choice | PrivateTypes.Message | PrivateTypes.CreateChoicesTemplete | PrivateTypes.CreateMessageTemplete | PrivateTypes.CreateDialogueTemplete,
-	PromiseTable: "MessagePromises" | "ChoicePromises" | "ChoiceTempletePromises" | "MessageTempletePromises" | "DialogueTempletePromises"
+	Scan: PrivateTypes.Choice | PrivateTypes.Message | PrivateTypes.CreateChoicesTemplate | PrivateTypes.CreateMessageTemplate | PrivateTypes.CreateDialogueTemplate,
+	PromiseTable: "MessagePromises" | "ChoicePromises" | "ChoiceTemplatePromises" | "MessageTemplatePromises" | "DialogueTemplatePromises"
 )
 	local Data = PlayersInDialogue[plr.Name]
 	if Scan.Listeners then
@@ -91,12 +91,12 @@ Packet.ChoiceChosen.listen(function(uuid, player: Player)
 	local Data: PrivateTypes.ActivePlayerData = PlayersInDialogue[player.Name]
 	if Data then
 		CancelPromises(Data.ChoicePromises)
-		CancelPromises(Data.ChoiceTempletePromises)
+		CancelPromises(Data.ChoiceTemplatePromises)
 		if Data.ExposeType == "Choice" then
 			for _, Choice in ipairs(Data.CurrentClientDialogue.Choices.Data) do
 				if Choice.UUID == UUID then
 					UseCallbacks(player, Choice, "ChoicePromises")
-					CancelPromises(Data.DialogueTempletePromises)
+					CancelPromises(Data.DialogueTemplatePromises)
 					if Choice.Response then
 						Data.CurrentClientDialogue = Choice.Response
 						Data.CurrentClientMessage = 1
@@ -106,8 +106,8 @@ Packet.ChoiceChosen.listen(function(uuid, player: Player)
 							Data.CurrentClientDialogue.Message.Data[Data.CurrentClientMessage],
 							"MessagePromises"
 						)
-						UseCallbacks(player, Data.CurrentClientDialogue.Message, "MessageTempletePromises")
-						UseCallbacks(player, Data.CurrentClientDialogue, "DialogueTempletePromises")
+						UseCallbacks(player, Data.CurrentClientDialogue.Message, "MessageTemplatePromises")
+						UseCallbacks(player, Data.CurrentClientDialogue, "DialogueTemplatePromises")
 						return Packet.ExposeMessage.sendTo({
 							Head = Data.CurrentClientDialogue.Message.Data[Data.CurrentClientMessage].Head,
 							Body = Data.CurrentClientDialogue.Message.Data[Data.CurrentClientMessage].Body,
@@ -157,8 +157,8 @@ Packet.FinishedMessage.listen(function(_, player)
 							"Listeners"
 						)
 					end
-					CancelPromises(Data.MessageTempletePromises)
-					UseCallbacks(player, Data.CurrentClientDialogue.Choices, "ChoiceTempletePromises")
+					CancelPromises(Data.MessageTemplatePromises)
+					UseCallbacks(player, Data.CurrentClientDialogue.Choices, "ChoiceTemplatePromises")
 					Packet.ExposeChoice.sendTo({
 						ChoiceMessage = Data.CurrentClientDialogue.Choices.ChoiceMessage,
 						Choices = Choices.Data,
@@ -184,24 +184,24 @@ function DialogueServer.Mount(Dialogue: PrivateTypes.MountInfo, Part: Instance, 
 				ExposeType = "Message",
 				MessagePromises = {},
 				ChoicePromises = {},
-				ChoiceTempletePromises = {},
-				MessageTempletePromises = {},
-				DialogueTempletePromises = {},
+				ChoiceTemplatePromises = {},
+				MessageTemplatePromises = {},
+				DialogueTemplatePromises = {},
 			}
 			Packet.ExposeMessage.sendTo(
 				{ Head = Dialogue.Message.Data[1].Head, Body = Dialogue.Message.Data[1].Body },
 				player
 			)
 			local Data = PlayersInDialogue[player.Name]
-			UseCallbacks(player, Data.CurrentClientDialogue.Message, "MessageTempletePromises")
-			UseCallbacks(player, Data.CurrentClientDialogue, "DialogueTempletePromises")
+			UseCallbacks(player, Data.CurrentClientDialogue.Message, "MessageTemplatePromises")
+			UseCallbacks(player, Data.CurrentClientDialogue, "DialogueTemplatePromises")
 		end),
 	})
 end
 
-function DialogueServer.CreateDialogueTemplete(
-	Message: PrivateTypes.CreateMessageTemplete,
-	Choice: PrivateTypes.CreateChoicesTemplete
+function DialogueServer.CreateDialogueTemplate(
+	Message: PrivateTypes.CreateMessageTemplate,
+	Choice: PrivateTypes.CreateChoicesTemplate
 )
 	local t = setmetatable({}, Listeners)
 	t.Message = Message
@@ -210,7 +210,7 @@ function DialogueServer.CreateDialogueTemplete(
 	return t
 end
 
-function DialogueServer.CreateChoicesTemplete(ChoiceMessage: string, ...: PrivateTypes.Choice)
+function DialogueServer.CreateChoicesTemplate(ChoiceMessage: string, ...: PrivateTypes.Choice)
 	assert(type(ChoiceMessage) == "string", "[Dialogue] Choice message is a string. ")
 	local t = setmetatable({}, Listeners)
 	t.Data = { ... }
@@ -219,7 +219,7 @@ function DialogueServer.CreateChoicesTemplete(ChoiceMessage: string, ...: Privat
 	return t
 end
 
-function DialogueServer.CreateMessageTemplete(...: PrivateTypes.Message)
+function DialogueServer.CreateMessageTemplate(...: PrivateTypes.Message)
 	local t = setmetatable({}, Listeners)
 	t.Data = { ... }
 	t.Listeners = {}
@@ -236,7 +236,7 @@ function DialogueServer.ConstructMessage(Head: string, Body: string)
 	return m
 end
 
-function DialogueServer.ConstructChoice(ChoiceName: string, Response: PrivateTypes.CreateDialogueTemplete)
+function DialogueServer.ConstructChoice(ChoiceName: string, Response: PrivateTypes.CreateDialogueTemplate)
 	assert(ChoiceName, "[Dialogue] Empty or nil for ChoiceName")
 	local c = setmetatable({}, Listeners)
 	c.ChoiceName = ChoiceName
