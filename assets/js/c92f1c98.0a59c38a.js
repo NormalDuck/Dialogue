@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[655],{86927:e=>{e.exports=JSON.parse('{"functions":[],"properties":[],"types":[],"name":"Listeners","desc":"Listeners are custom methods that are returned when creating components of dialogue","realm":["Client"],"source":{"line":21,"path":"src/DialogueServer.lua"}}')}}]);

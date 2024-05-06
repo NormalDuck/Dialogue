@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs=self.webpackChunkdocs||[]).push([[773],{63891:s=>{s.exports=JSON.parse('{"sourceUrl":"https://github.com/NormalDuck/Dialogue/blob/main","baseUrl":"/Dialogue/","classOrder":[],"apiCategories":[]}')}}]);
