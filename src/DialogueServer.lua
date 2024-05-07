@@ -10,19 +10,78 @@ local PublicTypes = require(script.Parent:WaitForChild("PublicTypes"))
 local Promise = require(script.Parent.Parent.Promise)
 local TableUtil = require(script.Parent.Parent.TableUtil)
 
+
+--[=[
+	@class DialogueServer
+	@server
+]=]
 local DialogueServer = {}
+
 local MountedDialogues = {}
 local PlayersInDialogue = {}
 
-local Listeners = {}
-Listeners.__index = Listeners
+--[=[
+	@class ServerSignals
+	Listeners are custom methods that are returned when creating components of dialogue.
+]=]
+local ServerSignals = {}
+ServerSignals.__index = ServerSignals
 
-function Listeners:AddTriggerSignal(fn: (player: Player) -> ())
+--[=[
+	Sends a signal whenever this Dialogue component has been triggered.
+	```lua
+	local Dialogue = require(path.to.dialogue)
+
+	Dialogue.Mount(
+		Dialogue.CreateDialogueTemplate(
+			Dialogue.CreateMessageTemplate(Dialogue.ConstructMessage():AddTriggerSignal(function(player)
+				print(`{player} triggered it!`)
+			end))
+				:AddTriggerSignal(function()
+					print("works for all constructors!")
+				end)
+				:AddTriggerSignal(function()
+					print("You can also chain them!")
+				end)
+				:AddTimeoutSignal(2, function()
+					print("Or mix with the other signal!")
+				end),
+			workspace.Instance
+		)
+	)
+	```
+]=]
+function ServerSignals:AddTriggerSignal(fn: (player: Player) -> ())
 	table.insert(self.Listeners, { Type = "Trigger", Callback = fn })
 	return self
 end
 
-function Listeners:AddTimeoutSignal(Time: number, fn: (player: Player) -> ())
+--[=[
+	Sends a signal whenever it reaches the time and client doesn't perform any action to the dialogue component
+
+	```lua
+	local Dialogue = require(path.to.dialogue)
+
+	Dialogue.Mount(
+		Dialogue.CreateDialogueTemplate(
+			Dialogue.CreateMessageTemplate(Dialogue.ConstructMessage():AddTimeoutSignal(2, function(player)
+				print(`{player} this prints when client doesn't finish your message within 2 seconds!`)
+			end))
+				:AddTimeoutSignal(1, function()
+					print("The next chain prints at the same time!")
+				end)
+				:AddTimeoutSignal(1, function()
+					print("Chains don't yield each other!")
+				end)
+				:AddTriggerSignal(2, function()
+					print("Or mix with the other signal!")
+				end),
+			workspace.Instance
+		)
+	)
+	```
+]=]
+function ServerSignals:AddTimeoutSignal(Time: number, fn: (player: Player) -> ())
 	table.insert(self.Listeners, { Type = "Timeout", Time = Time, Callback = fn })
 	return self
 end
@@ -173,6 +232,11 @@ Packet.FinishedMessage.listen(function(_, player)
 	end
 end)
 
+--[=[
+	@param Dialogue string -- hi
+	@param Part Instance -- The instance where clients can trigger the dialogue
+	@within DialogueServer
+]=]
 function DialogueServer.Mount(Dialogue: PrivateTypes.MountInfo, Part: Instance, CustomProximityPrompt: ProximityPrompt?)
 	local ProximityPrompt = Instance.new("ProximityPrompt", Part)
 	ProximityPrompt:AddTag("Dialogue")
@@ -203,7 +267,7 @@ function DialogueServer.CreateDialogueTemplate(
 	Message: PrivateTypes.CreateMessageTemplate,
 	Choice: PrivateTypes.CreateChoicesTemplate
 )
-	local t = setmetatable({}, Listeners)
+	local t = setmetatable({}, ServerSignals)
 	t.Message = Message
 	t.Choices = Choice
 	t.Listeners = {}
@@ -212,7 +276,7 @@ end
 
 function DialogueServer.CreateChoicesTemplate(ChoiceMessage: string, ...: PrivateTypes.Choice)
 	assert(type(ChoiceMessage) == "string", "[Dialogue] Choice message is a string. ")
-	local t = setmetatable({}, Listeners)
+	local t = setmetatable({}, ServerSignals)
 	t.Data = { ... }
 	t.ChoiceMessage = ChoiceMessage
 	t.Listeners = {}
@@ -220,7 +284,7 @@ function DialogueServer.CreateChoicesTemplate(ChoiceMessage: string, ...: Privat
 end
 
 function DialogueServer.CreateMessageTemplate(...: PrivateTypes.Message)
-	local t = setmetatable({}, Listeners)
+	local t = setmetatable({}, ServerSignals)
 	t.Data = { ... }
 	t.Listeners = {}
 	return t
@@ -229,7 +293,7 @@ end
 function DialogueServer.ConstructMessage(Head: string, Body: string)
 	assert(Head, "[Dialogue] Empty or nil for Head. Please provide a string")
 	assert(Body, "[Dialogue] Empty or nil for Head. Please provide a string.")
-	local m = setmetatable({}, Listeners)
+	local m = setmetatable({}, ServerSignals)
 	m.Head = Head
 	m.Body = Body
 	m.Listeners = {}
@@ -238,7 +302,7 @@ end
 
 function DialogueServer.ConstructChoice(ChoiceName: string, Response: PrivateTypes.CreateDialogueTemplate)
 	assert(ChoiceName, "[Dialogue] Empty or nil for ChoiceName")
-	local c = setmetatable({}, Listeners)
+	local c = setmetatable({}, ServerSignals)
 	c.ChoiceName = ChoiceName
 	c.UUID = HttpService:GenerateGUID()
 	c.Response = Response

@@ -1,71 +1,77 @@
+--[=[
+	@interface Message {Message}
+	.Head string -- the name to be displayed
+	.Body string -- the message to be displayed
+	@within DialogueServer
+	@private
+]=]
 export type Message = {
 	Head: string,
 	Body: string,
-	Listeners: {
-		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-		| { Type: "Trigger", Callback: (player: Player) -> () }
-	},
+	Listeners: Listeners,
 }
 
+--[=[
+	@interface Choice {Choice}
+	.ChoiceName string
+	.UUID string
+	.Response DialogueTemplate
+	@within DialogueServer
+	@private
+]=]
 export type Choice = {
 	ChoiceName: string,
 	UUID: string,
-	Response: MountInfo,
-	Listeners: {
-		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-		| { Type: "Trigger", Callback: (player: Player) -> () }
-	},
+	Response: DialogueTemplete,
+	Listeners: Listeners,
 }
 
-export type CreateChoicesTemplate = (
-	ChoiceMessage: string,
-	ConstructChoice...
-) -> {
+--[=[
+	@interface ChoicesTemplate {ChoicesTemplate}
+	.ChoiceMessage { string } -- The message to be displayed
+	.Data Choice -- The choices that are passed for the constructor
+	@within DialogueServer
+	@private
+]=]
+export type ChoicesTemplate = {
 	ChoiceMessage: string,
 	Data: { Choice },
-	Listeners: {
-		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-		| { Type: "Trigger", Callback: (player: Player) -> () }
-	},
+	Listeners: Listeners,
 }
-export type CreateMessageTemplate = (
-	ConstructMessage...
-) -> {
+
+--[=[
+	@interface MessageTemplate {MessageTemplate}
+	.Data { Message }
+	@within DialogueServer
+	@private
+]=]
+export type MessageTemplate = {
 	Data: { Message },
-	Listeners: {
-		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-		| { Type: "Trigger", Callback: (player: Player) -> () }
-	},
+	Listeners: Listeners,
 }
-export type CreateDialogueTemplate = (
-	Message: CreateMessageTemplate,
-	Choice: CreateChoicesTemplate
-) -> {
-	Message: CreateMessageTemplate,
-	Choice: CreateChoicesTemplate,
-	Listeners: {
-		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-		| { Type: "Trigger", Callback: (player: Player) -> () }
-	},
+
+--[=[
+	@interface DialogueTemplate {DialogueTemplate}
+	.Message MessageTemplate
+	.Choice ChoicesTemplate
+	@within DialogueServer
+	@private
+]=]
+export type DialogueTemplete = {
+	Message: MessageTemplate,
+	Choice: ChoicesTemplate,
+	Listeners: Listeners,
 }
+
+export type CreateChoicesTemplate = (ChoiceMessage: string, ConstructChoice...) -> ChoicesTemplate
+export type CreateMessageTemplate = (ConstructMessage...) -> MessageTemplate
+export type CreateDialogueTemplate = (Message: MessageTemplate, Choice: ChoicesTemplate) -> DialogueTemplete
 export type ConstructChoice = (ChoiceName: string, Response: CreateDialogueTemplate) -> Choice
 export type ConstructMessage = (Head: string, Body: string, Image: string) -> Message
+
 export type MountInfo = {
-	Message: {
-		Data: { Message },
-		Listeners: {
-			{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-			| { Type: "Trigger", Callback: (player: Player) -> () }
-		},
-	},
-	Choices: {
-		ChoiceMessage: string,
-		Data: { Choice },
-		Listeners: {
-			{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-			| { Type: "Trigger", Callback: (player: Player) -> () }
-		},
-	},
+	Message: MessageTemplate,
+	Choices: ChoicesTemplate,
 	Listeners: {
 		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
 		| { Type: "Trigger", Callback: (player: Player) -> () }
@@ -80,6 +86,13 @@ export type ActivePlayerData = {
 	ChoiceTemplatePromises: {},
 	MessageTemplatePromises: {},
 	DialogueTemplatePromises: {},
+}
+
+export type Listeners = {
+	Listeners: {
+		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
+		| { Type: "Trigger", Callback: (player: Player) -> () }
+	}?,
 }
 
 return nil

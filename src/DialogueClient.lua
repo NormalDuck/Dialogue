@@ -106,6 +106,9 @@ New("ScreenGui")({
 				New("UIAspectRatioConstraint")({
 					AspectRatio = 2.854,
 				}),
+				New("UICorner"){
+					CornerRadius = UDim.new(0.05)
+				},
 				--Head
 				New("TextLabel")(TableUtil.Reconcile({
 					Size = UDim2.fromScale(1, 0.3),
