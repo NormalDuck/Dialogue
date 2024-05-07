@@ -22,7 +22,7 @@ local PlayersInDialogue = {}
 
 --[=[
 	@class ServerSignals
-	Listeners are custom methods that are returned when creating components of dialogue.
+	Listeners are custom listners that are returned when creating components of dialogue.
 ]=]
 local ServerSignals = {}
 ServerSignals.__index = ServerSignals
@@ -233,7 +233,7 @@ Packet.FinishedMessage.listen(function(_, player)
 end)
 
 --[=[
-	@param Dialogue string -- hi
+	@param Dialogue DialogueTemplate 
 	@param Part Instance -- The instance where clients can trigger the dialogue
 	@within DialogueServer
 ]=]
@@ -263,6 +263,12 @@ function DialogueServer.Mount(Dialogue: PrivateTypes.MountInfo, Part: Instance, 
 	})
 end
 
+--[=[
+	@param Message MessageTemplate
+	@param Choice ChoicesTemplate
+	@return DialogueTemplate
+	The constructor for DialogueTemplate
+]=]
 function DialogueServer.CreateDialogueTemplate(
 	Message: PrivateTypes.CreateMessageTemplate,
 	Choice: PrivateTypes.CreateChoicesTemplate
@@ -274,6 +280,12 @@ function DialogueServer.CreateDialogueTemplate(
 	return t
 end
 
+--[=[
+	@param ChoiceMessage string -- The message to be displayed when its at choice state.
+	@param ... Choice -- The list of choices
+	@return ChoicesTemplate
+	The constructor for ChoicesTemplate
+]=]
 function DialogueServer.CreateChoicesTemplate(ChoiceMessage: string, ...: PrivateTypes.Choice)
 	assert(type(ChoiceMessage) == "string", "[Dialogue] Choice message is a string. ")
 	local t = setmetatable({}, ServerSignals)
@@ -283,6 +295,10 @@ function DialogueServer.CreateChoicesTemplate(ChoiceMessage: string, ...: Privat
 	return t
 end
 
+--[=[
+	@param ... Message -- All the message to be displayed when its at message state.
+	@return MessageTemplate
+]=]
 function DialogueServer.CreateMessageTemplate(...: PrivateTypes.Message)
 	local t = setmetatable({}, ServerSignals)
 	t.Data = { ... }
@@ -290,6 +306,11 @@ function DialogueServer.CreateMessageTemplate(...: PrivateTypes.Message)
 	return t
 end
 
+--[=[
+	@param Head string
+	@param Body string
+	@return Message
+]=]
 function DialogueServer.ConstructMessage(Head: string, Body: string)
 	assert(Head, "[Dialogue] Empty or nil for Head. Please provide a string")
 	assert(Body, "[Dialogue] Empty or nil for Head. Please provide a string.")
@@ -300,6 +321,11 @@ function DialogueServer.ConstructMessage(Head: string, Body: string)
 	return m
 end
 
+--[=[
+	@param ChoiceName string -- The message to be displayed at choice state
+	@param Response DialogueTemplate
+	@return Choice
+]=]
 function DialogueServer.ConstructChoice(ChoiceName: string, Response: PrivateTypes.CreateDialogueTemplate)
 	assert(ChoiceName, "[Dialogue] Empty or nil for ChoiceName")
 	local c = setmetatable({}, ServerSignals)

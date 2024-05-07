@@ -1,5 +1,5 @@
 --[=[
-	@interface Message {Message}
+	@type Message {Message}
 	.Head string -- the name to be displayed
 	.Body string -- the message to be displayed
 	@within DialogueServer
@@ -12,7 +12,7 @@ export type Message = {
 }
 
 --[=[
-	@interface Choice {Choice}
+	@type Choice {Choice}
 	.ChoiceName string
 	.UUID string
 	.Response DialogueTemplate
@@ -27,7 +27,7 @@ export type Choice = {
 }
 
 --[=[
-	@interface ChoicesTemplate {ChoicesTemplate}
+	@type ChoicesTemplate {ChoicesTemplate}
 	.ChoiceMessage { string } -- The message to be displayed
 	.Data Choice -- The choices that are passed for the constructor
 	@within DialogueServer
@@ -40,7 +40,7 @@ export type ChoicesTemplate = {
 }
 
 --[=[
-	@interface MessageTemplate {MessageTemplate}
+	@type MessageTemplate {MessageTemplate}
 	.Data { Message }
 	@within DialogueServer
 	@private
@@ -51,7 +51,7 @@ export type MessageTemplate = {
 }
 
 --[=[
-	@interface DialogueTemplate {DialogueTemplate}
+	@type DialogueTemplate {DialogueTemplate}
 	.Message MessageTemplate
 	.Choice ChoicesTemplate
 	@within DialogueServer
