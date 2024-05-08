@@ -1,5 +1,10 @@
 --!native
 --!nocheck
+
+--[=[
+	@class DialogueClient
+	@client
+]=]
 local DialogueClient = {}
 
 local CollectionService = game:GetService("CollectionService")
@@ -13,10 +18,39 @@ local LemonSignal = require(ReplicatedStorage.Packages.LemonSignal)
 local Packet = require(script.Parent:WaitForChild("packet"))
 local PublicTypes = require(script.Parent:WaitForChild("PublicTypes"))
 
+--[=[
+	@type CloseDialogue RBXScriptSignal
+	@within DialogueClient
+	whenever the dialogue is closed by the server (clients cannot close dialogue by themselves)
+]=]
 DialogueClient.CloseDialgoue = LemonSignal.new()
+
+--[=[
+	@type OpenDialogue RBXScriptSignal
+	@within DialogueClient
+	whenever the client triggers a proximity prompt that is dialogue related
+]=]
 DialogueClient.OpenDialogue = LemonSignal.new()
+
+--[=[
+	@type ChoiceChosen RBXScriptSignal
+	@within DialogueClient
+	whenever the client has selected any choice in choice state
+]=]
 DialogueClient.ChoiceChosen = LemonSignal.new()
+
+--[=[
+	@type SwitchToChoice RBXScriptSignal
+	@within DialogueClient
+	Whenever the client has finished the messages switched into choice state
+]=]
 DialogueClient.SwitchToChoice = LemonSignal.new()
+
+--[=[
+	@type NextMessage RBXScriptSignal
+	@within DialogueClient
+	whenever the server exposes a message to the client
+]=]
 DialogueClient.NextMessage = LemonSignal.new()
 
 local New = Fusion.New
@@ -26,7 +60,7 @@ local Computed = Fusion.Computed
 local OnEvent = Fusion.OnEvent
 
 --States--
-local DialogueState = Value(false)
+local DialogueState = Value("Closed")
 local Head = Value("")
 local Body = Value("")
 local ChoiceMessage = Value("")
@@ -71,17 +105,26 @@ local StyleProps = {
 	Font = Enum.Font.BuilderSans,
 }
 
-function DialogueClient.GetDialogueState()
+--[=[
+	@return "Message" | "Choice" | "Closed"
+	returns the choices
+]=]
+function DialogueClient.GetDialogueState(): "Message" | "Choice" | "Closed"
 	return DialogueState:get()
 end
 
+--[=[
+	@return {Head: string | nil, Body: string | nil}
+]=]
 function DialogueClient.GetMessage()
-	assert(DialogueState:get() == "Message", "[Dialgoue] Cannot get message in other states.")
-	return Head:get(), Body:get()
+	return { Head = Head:get(), Body = Body:get() }
 end
 
+--[=[
+	@return {Choice} | nil
+	although it returns choice, but the client **cannot read** the response nor the listeners for safety reasons.
+]=]
 function DialogueClient.GetChoices()
-	assert(DialogueState:get() == "Choice", "[Dialogue] Cannot get choices in other states.")
 	return Choices:get()
 end
 
@@ -106,9 +149,9 @@ New("ScreenGui")({
 				New("UIAspectRatioConstraint")({
 					AspectRatio = 2.854,
 				}),
-				New("UICorner"){
-					CornerRadius = UDim.new(0.05)
-				},
+				New("UICorner")({
+					CornerRadius = UDim.new(0.05),
+				}),
 				--Head
 				New("TextLabel")(TableUtil.Reconcile({
 					Size = UDim2.fromScale(1, 0.3),

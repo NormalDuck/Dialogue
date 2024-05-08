@@ -63,22 +63,14 @@ export type DialogueTemplete = {
 	Listeners: Listeners,
 }
 
-export type CreateChoicesTemplate = (ChoiceMessage: string, ConstructChoice...) -> ChoicesTemplate
-export type CreateMessageTemplate = (ConstructMessage...) -> MessageTemplate
-export type CreateDialogueTemplate = (Message: MessageTemplate, Choice: ChoicesTemplate) -> DialogueTemplete
-export type ConstructChoice = (ChoiceName: string, Response: CreateDialogueTemplate) -> Choice
-export type ConstructMessage = (Head: string, Body: string, Image: string) -> Message
+export type MakeChoicesTemplate = (ChoiceMessage: string, MakeChoice...) -> ChoicesTemplate
+export type MakeMessageTemplate = (MakeMessage...) -> MessageTemplate
+export type MakeDialogueTemplate = (Message: MessageTemplate, Choice: ChoicesTemplate) -> DialogueTemplete
+export type MakeChoice = (ChoiceName: string, Response: MakeDialogueTemplate) -> Choice
+export type MakeMessage = (Head: string, Body: string, Image: string) -> Message
 
-export type MountInfo = {
-	Message: MessageTemplate,
-	Choices: ChoicesTemplate,
-	Listeners: {
-		{ Type: "Timeout", Time: number, Callback: (player: Player) -> () }
-		| { Type: "Trigger", Callback: (player: Player) -> () }
-	},
-}
 export type ActivePlayerData = {
-	CurrentClientDialogue: MountInfo,
+	CurrentClientDialogue: DialogueTemplete,
 	CurrentClientMessage: number,
 	ExposeType: string,
 	MessagePromises: {},

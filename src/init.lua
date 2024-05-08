@@ -1,12 +1,10 @@
 local RunService = game:GetService("RunService")
 
-if RunService:IsServer() then
-	return require(script.DialogueServer)
-else
+if not RunService:IsServer() then
 	local DialogueServer = script:FindFirstChild("DialogueServer")
 	if DialogueServer and RunService:IsRunning() then
 		DialogueServer:Destroy()
 	end
-
-	return require(script.DialogueClient)
 end
+
+return { DialogueClient = require(script.DialogueClient), DialogueServer = require(script.DialogueServer) }

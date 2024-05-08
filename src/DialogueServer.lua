@@ -10,7 +10,6 @@ local PublicTypes = require(script.Parent:WaitForChild("PublicTypes"))
 local Promise = require(script.Parent.Parent.Promise)
 local TableUtil = require(script.Parent.Parent.TableUtil)
 
-
 --[=[
 	@class DialogueServer
 	@server
@@ -33,12 +32,12 @@ ServerSignals.__index = ServerSignals
 	local Dialogue = require(path.to.dialogue)
 
 	Dialogue.Mount(
-		Dialogue.CreateDialogueTemplate(
-			Dialogue.CreateMessageTemplate(Dialogue.ConstructMessage():AddTriggerSignal(function(player)
+		Dialogue.MakeDialogueTemplate(
+			Dialogue.MakeMessageTemplate(Dialogue.MakeMessage():AddTriggerSignal(function(player)
 				print(`{player} triggered it!`)
 			end))
 				:AddTriggerSignal(function()
-					print("works for all constructors!")
+					print("works for all Makeors!")
 				end)
 				:AddTriggerSignal(function()
 					print("You can also chain them!")
@@ -63,8 +62,8 @@ end
 	local Dialogue = require(path.to.dialogue)
 
 	Dialogue.Mount(
-		Dialogue.CreateDialogueTemplate(
-			Dialogue.CreateMessageTemplate(Dialogue.ConstructMessage():AddTimeoutSignal(2, function(player)
+		Dialogue.MakeDialogueTemplate(
+			Dialogue.MakeMessageTemplate(Dialogue.MakeMessage():AddTimeoutSignal(2, function(player)
 				print(`{player} this prints when client doesn't finish your message within 2 seconds!`)
 			end))
 				:AddTimeoutSignal(1, function()
@@ -89,7 +88,7 @@ end
 --Searches for the message/choice and checks if there is callbacks (either TimeoutCallback, TriggerCallback). Calls them
 local function UseCallbacks(
 	plr: Player,
-	Scan: PrivateTypes.Choice | PrivateTypes.Message | PrivateTypes.CreateChoicesTemplate | PrivateTypes.CreateMessageTemplate | PrivateTypes.CreateDialogueTemplate,
+	Scan: PrivateTypes.Choice | PrivateTypes.Message | PrivateTypes.MakeChoicesTemplate | PrivateTypes.MakeMessageTemplate | PrivateTypes.MakeDialogueTemplate,
 	PromiseTable: "MessagePromises" | "ChoicePromises" | "ChoiceTemplatePromises" | "MessageTemplatePromises" | "DialogueTemplatePromises"
 )
 	local Data = PlayersInDialogue[plr.Name]
@@ -237,7 +236,11 @@ end)
 	@param Part Instance -- The instance where clients can trigger the dialogue
 	@within DialogueServer
 ]=]
-function DialogueServer.Mount(Dialogue: PrivateTypes.MountInfo, Part: Instance, CustomProximityPrompt: ProximityPrompt?)
+function DialogueServer.Mount(
+	Dialogue: PrivateTypes.DialogueTemplete,
+	Part: Instance,
+	CustomProximityPrompt: ProximityPrompt?
+)
 	local ProximityPrompt = Instance.new("ProximityPrompt", Part)
 	ProximityPrompt:AddTag("Dialogue")
 	table.insert(MountedDialogues, {
@@ -269,9 +272,9 @@ end
 	@return DialogueTemplate
 	The constructor for DialogueTemplate
 ]=]
-function DialogueServer.CreateDialogueTemplate(
-	Message: PrivateTypes.CreateMessageTemplate,
-	Choice: PrivateTypes.CreateChoicesTemplate
+function DialogueServer.MakeDialogueTemplate(
+	Message: PrivateTypes.MakeMessageTemplate,
+	Choice: PrivateTypes.MakeChoicesTemplate
 )
 	local t = setmetatable({}, ServerSignals)
 	t.Message = Message
@@ -286,7 +289,7 @@ end
 	@return ChoicesTemplate
 	The constructor for ChoicesTemplate
 ]=]
-function DialogueServer.CreateChoicesTemplate(ChoiceMessage: string, ...: PrivateTypes.Choice)
+function DialogueServer.MakeChoicesTemplate(ChoiceMessage: string, ...: PrivateTypes.Choice)
 	assert(type(ChoiceMessage) == "string", "[Dialogue] Choice message is a string. ")
 	local t = setmetatable({}, ServerSignals)
 	t.Data = { ... }
@@ -299,7 +302,7 @@ end
 	@param ... Message -- All the message to be displayed when its at message state.
 	@return MessageTemplate
 ]=]
-function DialogueServer.CreateMessageTemplate(...: PrivateTypes.Message)
+function DialogueServer.MakeMessageTemplate(...: PrivateTypes.Message)
 	local t = setmetatable({}, ServerSignals)
 	t.Data = { ... }
 	t.Listeners = {}
@@ -311,7 +314,7 @@ end
 	@param Body string
 	@return Message
 ]=]
-function DialogueServer.ConstructMessage(Head: string, Body: string)
+function DialogueServer.MakeMessage(Head: string, Body: string)
 	assert(Head, "[Dialogue] Empty or nil for Head. Please provide a string")
 	assert(Body, "[Dialogue] Empty or nil for Head. Please provide a string.")
 	local m = setmetatable({}, ServerSignals)
@@ -326,7 +329,7 @@ end
 	@param Response DialogueTemplate
 	@return Choice
 ]=]
-function DialogueServer.ConstructChoice(ChoiceName: string, Response: PrivateTypes.CreateDialogueTemplate)
+function DialogueServer.MakeChoice(ChoiceName: string, Response: PrivateTypes.MakeDialogueTemplate)
 	assert(ChoiceName, "[Dialogue] Empty or nil for ChoiceName")
 	local c = setmetatable({}, ServerSignals)
 	c.ChoiceName = ChoiceName
