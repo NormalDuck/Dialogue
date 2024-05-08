@@ -1,9 +1,9 @@
-export type MakeChoicesTemplete = (ChoiceMessage: string, MakeChoice...) -> Signals
-export type MakeMessageTemplete = (MakeMessage...) -> Signals
-export type MakeDialogueTemplete = (Message: MakeMessageTemplete, Choice: MakeChoicesTemplete) -> Signals
-export type MakeChoice = (ChoiceName: string, Response: MakeDialogueTemplete) -> Signals
+export type MakeChoicesTemplate = (ChoiceMessage: string, MakeChoice...) -> Signals
+export type MakeMessageTemplate = (MakeMessage...) -> Signals
+export type MakeDialogueTemplate = (Message: MakeMessageTemplate, Choice: MakeChoicesTemplate) -> Signals
+export type MakeChoice = (ChoiceName: string, Response: MakeDialogueTemplate) -> Signals
 export type MakeMessage = (Head: string, Body: string) -> Signals
-export type Mount = (MakeDialogueTemplete, Part: Instance) -> ()
+export type Mount = (MakeDialogueTemplate, Part: Instance) -> ()
 
 export type GetDialogueState = () -> "Message" | "Choice" | "Closed"
 export type GetMessage = () -> string
@@ -11,9 +11,9 @@ export type GetChoices = () -> { { UUID: string, ChoiceName: string } }
 export type DialogueServer = {
 	MakeChoice: MakeChoice,
 	MakeMessage: MakeMessage,
-	MakeChoicesTemplete: MakeChoicesTemplete,
-	MakeMessageTemplete: MakeMessageTemplete,
-	MakeDialogueTemplete: MakeDialogueTemplete,
+	MakeChoicesTemplate: MakeChoicesTemplate,
+	MakeMessageTemplate: MakeMessageTemplate,
+	MakeDialogueTemplate: MakeDialogueTemplate,
 	Mount: Mount,
 }
 
