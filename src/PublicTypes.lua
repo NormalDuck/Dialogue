@@ -1,7 +1,7 @@
 export type MakeChoicesTemplete = (ChoiceMessage: string, MakeChoice...) -> Signals
 export type MakeMessageTemplete = (MakeMessage...) -> Signals
 export type MakeDialogueTemplete = (Message: MakeMessageTemplete, Choice: MakeChoicesTemplete) -> Signals
-export type MakeChoice = (ChoiceName: string, Response: MakeDialogueTemplete, Timeout: number) -> Signals
+export type MakeChoice = (ChoiceName: string, Response: MakeDialogueTemplete) -> Signals
 export type MakeMessage = (Head: string, Body: string) -> Signals
 export type Mount = (MakeDialogueTemplete, Part: Instance) -> ()
 

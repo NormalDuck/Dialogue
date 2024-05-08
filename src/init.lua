@@ -1,10 +1,14 @@
 local RunService = game:GetService("RunService")
+local PublicTypes = require(script.PublicTypes)
 
-if not RunService:IsServer() then
+if RunService:IsServer() then
+	require(script.DialogueServer)
+else
 	local DialogueServer = script:FindFirstChild("DialogueServer")
 	if DialogueServer and RunService:IsRunning() then
 		DialogueServer:Destroy()
 	end
+	require(script.DialogueClient)
 end
 
-return { DialogueClient = require(script.DialogueClient), DialogueServer = require(script.DialogueServer) }
+return nil :: { DialogueClient: PublicTypes.DialogueClient, DialogueServer: PublicTypes.DialogueServer }
