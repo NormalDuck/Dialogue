@@ -1,3 +1,5 @@
+# ⚠️ Archival ⚠️
+As my first open source project, this is a HUGE mess and I don't want to maintain this package anymore since it can be achieved with more modern frameworks.
 # Duck's Dialogue
 A secure, lightweight, server-sided, Fusion-based module.
 ## Features
